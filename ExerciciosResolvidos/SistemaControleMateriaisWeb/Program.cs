@@ -1,17 +1,37 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Identity;
 using SistemaControleMateriaisWeb.Data;
+using SistemaControleMateriaisWeb.Models;
+using SistemaControleMateriaisWeb.Repositories;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
-builder.Services.AddScoped<BancoDados>();
+
+builder.Services.AddSingleton<DatabaseConnectionFactory>();
+builder.Services.AddScoped<MaterialRepository>();
+builder.Services.AddScoped<UsuarioRepository>();
+builder.Services.AddScoped<DatabaseInitializer>();
+builder.Services.AddScoped<IPasswordHasher<Usuario>, PasswordHasher<Usuario>>();
+
+builder.Services
+    .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Account/Login";
+        options.AccessDeniedPath = "/Account/AcessoNegado";
+        options.ExpireTimeSpan = TimeSpan.FromHours(8);
+        options.SlidingExpiration = true;
+    });
+
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -20,18 +40,19 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 using (IServiceScope scope = app.Services.CreateScope())
 {
-    BancoDados banco = scope.ServiceProvider.GetRequiredService<BancoDados>();
-    banco.CriarBanco();
+    var initializer =
+        scope.ServiceProvider.GetRequiredService<DatabaseInitializer>();
+
+    initializer.Inicializar();
 }
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
-    .WithStaticAssets();
-
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();

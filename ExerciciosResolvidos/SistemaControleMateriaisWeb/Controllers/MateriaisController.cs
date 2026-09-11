@@ -1,29 +1,40 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SistemaControleMateriaisWeb.Data;
 using SistemaControleMateriaisWeb.Models;
+using SistemaControleMateriaisWeb.Repositories;
 
 namespace SistemaControleMateriaisWeb.Controllers;
 
+[Authorize]
 public class MateriaisController : Controller
 {
-    private readonly BancoDados Banco;
+    private readonly MaterialRepository _materiais;
 
-    public MateriaisController(BancoDados banco)
+    public MateriaisController(MaterialRepository materiais)
     {
-        Banco = banco;
+        _materiais = materiais;
     }
 
     public IActionResult Index()
     {
-        List<Material> materiais = Banco.ListarMateriais();
-
+        List<Material> materiais = _materiais.ListarTodos();
         return View(materiais);
+    }
+
+    public IActionResult Details(int id)
+    {
+        Material? material = _materiais.BuscarPorId(id);
+
+        if (material is null)
+            return NotFound();
+
+        return View(material);
     }
 
     [HttpGet]
     public IActionResult Create()
     {
-        return View();
+        return View(new Material());
     }
 
     [HttpPost]
@@ -31,38 +42,21 @@ public class MateriaisController : Controller
     public IActionResult Create(Material material)
     {
         if (!ModelState.IsValid)
-        {
             return View(material);
-        }
 
-        Banco.SalvarMaterial(material);
-
-        TempData["Mensagem"] = "Material cadastrado com sucesso!";
+        _materiais.Inserir(material);
+        TempData["Mensagem"] = "Material cadastrado com sucesso.";
 
         return RedirectToAction(nameof(Index));
-    }
-
-    public IActionResult Details(int id)
-    {
-        Material? material = Banco.BuscarMaterialPorId(id);
-
-        if (material == null)
-        {
-            return NotFound();
-        }
-
-        return View(material);
     }
 
     [HttpGet]
     public IActionResult Edit(int id)
     {
-        Material? material = Banco.BuscarMaterialPorId(id);
+        Material? material = _materiais.BuscarPorId(id);
 
-        if (material == null)
-        {
+        if (material is null)
             return NotFound();
-        }
 
         return View(material);
     }
@@ -72,36 +66,25 @@ public class MateriaisController : Controller
     public IActionResult Edit(int id, Material material)
     {
         if (id != material.Id)
-        {
             return BadRequest();
-        }
 
         if (!ModelState.IsValid)
-        {
             return View(material);
-        }
 
-        bool alterado = Banco.AlterarMaterial(material);
-
-        if (!alterado)
-        {
+        if (!_materiais.Atualizar(material))
             return NotFound();
-        }
 
-        TempData["Mensagem"] = "Material alterado com sucesso!";
-
+        TempData["Mensagem"] = "Material alterado com sucesso.";
         return RedirectToAction(nameof(Index));
     }
 
     [HttpGet]
     public IActionResult Delete(int id)
     {
-        Material? material = Banco.BuscarMaterialPorId(id);
+        Material? material = _materiais.BuscarPorId(id);
 
-        if (material == null)
-        {
+        if (material is null)
             return NotFound();
-        }
 
         return View(material);
     }
@@ -111,15 +94,10 @@ public class MateriaisController : Controller
     [ValidateAntiForgeryToken]
     public IActionResult DeleteConfirmed(int id)
     {
-        bool excluido = Banco.ExcluirMaterial(id);
-
-        if (!excluido)
-        {
+        if (!_materiais.Excluir(id))
             return NotFound();
-        }
 
-        TempData["Mensagem"] = "Material excluído com sucesso!";
-
+        TempData["Mensagem"] = "Material excluído com sucesso.";
         return RedirectToAction(nameof(Index));
     }
 }

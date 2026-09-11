@@ -1,41 +1,44 @@
-using System.Diagnostics;
-using SistemaControleMateriaisWeb.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SistemaControleMateriaisWeb.Models;
+using SistemaControleMateriaisWeb.Repositories;
+using SistemaControleMateriaisWeb.ViewModels;
 
 namespace SistemaControleMateriaisWeb.Controllers;
 
+[Authorize]
 public class HomeController : Controller
 {
-    private readonly BancoDados Banco;
+    private readonly MaterialRepository _materiais;
 
-    public HomeController(BancoDados banco)
+    public HomeController(MaterialRepository materiais)
     {
-        Banco = banco;
+        _materiais = materiais;
     }
 
     public IActionResult Index()
     {
-        List<Material> materiais = Banco.ListarMateriais();
+        List<Material> materiais = _materiais.ListarTodos();
 
-        DashboardViewModel dashboard = new DashboardViewModel();
-
-        dashboard.TotalMateriais = materiais.Count;
+        var model = new DashboardViewModel
+        {
+            TotalMateriais = materiais.Count
+        };
 
         foreach (Material material in materiais)
         {
-            dashboard.TotalUnidades += material.Quantidade;
+            model.TotalUnidades += material.Quantidade;
 
             if (material.Quantidade == 0)
             {
-                dashboard.EstoqueZerado++;
+                model.EstoqueZerado++;
             }
             else if (material.Quantidade <= material.EstoqueMinimo)
             {
-                dashboard.EstoqueBaixo++;
+                model.EstoqueBaixo++;
             }
         }
 
-        return View(dashboard);
+        return View(model);
     }
 }
