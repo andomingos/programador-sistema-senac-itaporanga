@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SistemaControleMateriais")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c685ff413806d833cf21b5cdce46704b20c19af3")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4ebcfc691075a04fcdb49e2bf04d43fd15788fa4")]
 [assembly: System.Reflection.AssemblyProductAttribute("SistemaControleMateriais")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SistemaControleMateriais")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
